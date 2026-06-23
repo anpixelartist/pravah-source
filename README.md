@@ -2,7 +2,7 @@
 
 **Stop counting tickets. Start recovering time.**
 
-Pravah turns Bengaluru's parking-violation records into a decision tool for the Traffic
+Pravah - turns Bengaluru's parking-violation records into a decision tool for the Traffic
 Police. It ranks every junction by a single **pressure score**, exposes the city's evening
 enforcement **blind spots** and **phantom hotspots**, **predicts** which junctions get worse
 next week (interpretable ML), and recommends **officer deployment** — with a plain-language
