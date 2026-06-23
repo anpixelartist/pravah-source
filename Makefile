@@ -1,26 +1,19 @@
-.PHONY: setup aggregates web demo test lint build-web clean
-PY ?= python3
+# Pravah config — weights & thresholds live here so they're transparent and adjustable.
+# An officer can re-weight the Traffic Pressure Index and watch the ranking move.
 
-setup:        ## install package + dev deps (uv if present, else pip)
-	@command -v uv >/dev/null 2>&1 && uv pip install -e ".[dev,ml]" || $(PY) -m pip install -e ".[dev,ml]"
+[paths]
+raw_dir = "data/raw"
+violations_glob = "*violation*.csv,violations.csv"
+out_json = "web/data/aggregates.json"
+# NOTE: only the provided parking-violation dataset is used. The ASTraM event/incident
+# dataset is intentionally NOT consumed (competition constraint) — see docs/ADR 0002.
 
-aggregates:   ## regenerate web/data/aggregates.json from data/raw/*.csv
-	$(PY) -m pravah.build_aggregates
+[weights]            # must sum to 1 (auto-normalised if not). See docs/PRESSURE_INDEX.md
+chronic = 0.50
+blindness = 0.30
+volume = 0.20
 
-web:          ## serve the command centre at http://localhost:8000 (dev; fetch works)
-	@cd web && $(PY) -m http.server 8000
-
-demo:         ## open the offline command centre (data inlined)
-	@echo "Open web/index.html in a browser (offline-safe)."
-
-test:         ## run unit tests (add -m 'not data' to skip data-gated tests)
-	$(PY) -m pytest -q
-
-lint:         ## ruff check
-	@command -v ruff >/dev/null 2>&1 && ruff check . || echo "ruff not installed (make setup)"
-
-build-web:    ## M6: emit a single self-contained offline file into dist/
-	@echo "M6 task: inline web/data/aggregates.json into web/index.html -> dist/pravah.html"
-
-clean:
-	rm -rf dist __pycache__ .pytest_cache src/pravah/__pycache__
+[model]
+recovery_coef = 0.90       # EST: recoverable vehicle-hours/week = cost/weeks * this
+min_junction_records = 80
+bg_sample = 3500

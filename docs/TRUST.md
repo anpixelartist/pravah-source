@@ -55,10 +55,27 @@ validated FACTs reproduce unchanged. The same insight also drives the index's bl
 - **Honest about the optimiser:** corr(ticket-count, impact) = 0.98, so re-ranking deployment by
   impact instead of raw count only adds **~3–5%** more time recovered. We say so — the real wins
   are the blind-spot + phantom coverage and the forward forecast, not the optimiser delta.
-- **Stated limits** (put them on a slide): selection bias, geocoding noise, timestamps are
-  enforcement-time not occurrence-time, ~30% validation-rejection rate, cold-start junctions.
+- **Robust to the rejected-ticket bias:** drop every rejected ticket and re-run — the top-10
+  junctions stay **9/10** unchanged (top junction still Safina Plaza) and the evening share moves
+  only **0.85% → 0.79%**. The findings aren't artifacts of disputed tickets. Reproduced by
+  `tests/test_sanity.py`.
 - **Equity guardrail** (`equity.py`): deploying purely by time-recovered over-polices rich
   commercial corridors and starves residential zones — flag it.
+
+## 3a. Known limits & how we handle them
+The data is enforcement-generated; some bias is **structural and cannot be fully removed** from a
+dataset that never recorded the absences. We don't hide that — we bound it, mitigate it, and show
+the residual. (This is also surfaced in the UI: the Overview "Honest about the data" note and a
+per-junction **data-confidence** flag.)
+
+| Limit | Why it matters | What Pravah does | Residual risk |
+|---|---|---|---|
+| **Enforcement-generated** — tickets only exist where officers stood | Un-patrolled junctions read as "clean" when they're just unseen; a naive model would entrench current patrols | Coverage-normalised features (`features.coverage_adjust`, FE-3) + the **blindness** term; we treat the blind spot as *the finding*, not noise (ADR 0004) | Places with **zero** history can't be scored from absence — surfaced as cold-start, never invented |
+| **Timestamps are filing-time, not occurrence-time** | A 3–9pm crackdown clusters at filing time; the 0.85% evening figure partly reflects *when officers file* | We don't rest the claim on the raw clock alone — we use a **control**: junctions that *are* watched in the evening still write ~12–15% of tickets then, so the gap is enforcement, not reality | Exact occurrence times are unknowable; the evening finding is directional, not a precise count |
+| **~30% of *decided* tickets rejected** (≈17% of all; ~40% are never adjudicated) | Scores leaning on rejected tickets are less reliable | Rejection rate (among decided tickets) is exported **per junction** and shown as a **confidence flag** (high/medium/low) in the UI; the ranking is verified robust to dropping rejected tickets (above) | Can't tell officer-error vs contested-but-real vs data-entry; we flag, we don't adjudicate |
+| Geocoding noise · cold-start junctions | Minor placement error; thin-history junctions | ~270m grid tolerance; cold-start junctions degrade gracefully (no guessed scores) | Small positional jitter remains |
+
+> The honest stance: Pravah makes a biased dataset **safer to act on** — it cannot make it unbiased.
 
 ## 4. Human-in-the-loop
 Pravah recommends; the officer decides. Never auto-dispatch. Say this explicitly — it is

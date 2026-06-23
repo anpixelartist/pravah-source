@@ -238,7 +238,13 @@
       `<div class="clocknote">Enforcement peaks 8am–noon, then <b>goes dark after 3pm</b>. Yet junctions that ` +
       `<span class="hl">are</span> watched in the evening still write ~${k.covered_eve}% of their tickets then — so this ` +
       `is an <b>enforcement gap, not reality</b>. An estimated <b>~${(k.hidden_est / 1000).toFixed(0)}k</b> evening ` +
-      `cases go unseen each window (EST).</div>`;
+      `cases go unseen each window (EST).</div>` +
+      `<div class="slab" style="margin-top:18px">Honest about the data</div>` +
+      `<ul class="limits">` +
+      `<li><b>Tickets only exist where officers stood.</b> Un-patrolled spots read as zero — not clean, just unseen. We correct with coverage-normalised features and the blind-spot term, and treat the blind spot as the finding.</li>` +
+      `<li><b>Timestamps are filing-time, not occurrence-time.</b> So our evening case rests on a control: watched junctions still write ~${k.covered_eve}% of tickets in the evening — when officers are there, evenings get caught.</li>` +
+      `<li><b>~${k.reject_pct ?? 30}% of tickets are rejected or disputed.</b> Every junction shows its own rejection rate as a confidence flag, and low-confidence scores are tagged so you don't over-trust them.</li>` +
+      `</ul>`;
   }
 
   function renderPriorities() {
@@ -266,6 +272,11 @@
     const ev = (j.evidence || []).map((r) =>
       `<div class="ev"><span>${r.t}</span><span>${r.o} · ${r.v}</span><span class="${/approv/i.test(r.s) ? 'ok' : (/reject/i.test(r.s) ? 'no' : '')}">${r.s}</span></div>`).join('')
       || '<div class="note">No sample tickets exported for this junction.</div>';
+    const rr = j.reject_rate ?? 0;        // data-confidence: rejection rate among decided tickets
+    const cf = rr >= 45 ? ['low', '⚠', ' Lean on the raw tickets below, not just the score.']
+      : rr >= 25 ? ['medium', '•', ''] : ['high', '✓', ''];
+    const conf = `<div class="conf ${cf[0]}"><span class="ci">${cf[1]}</span><div>Data confidence: <b>${cf[0]}</b> ` +
+      `<span class="badge fact">FACT</span> · ${rr}% of decided tickets here were rejected.${cf[2]}</div></div>`;
     return `<div class="jh"><div class="jscore" style="background:${heat(j.pressure)}"><span class="n">${j.pressure}</span><span class="u">SCORE</span></div>` +
       `<div class="jmeta"><div class="jt">${j.name}</div><div class="js">${j.ps ? j.ps + ' police station · ' : ''}most common: ${j.top}</div></div></div>` +
       `<div class="bbar">${seg(j.pc, 'seg-c', 'parking')}${seg(j.pb, 'seg-b', 'blind')}${seg(j.pv, 'seg-v', 'cases')}</div>` +
@@ -275,6 +286,7 @@
       `<span><i class="seg-v"></i><b>${Math.round(j.pv)}</b> from the number of cases <span class="badge fact">FACT</span></span></div>` +
       fc +
       `<div class="recline">Send <b>${j.req} officer${j.req > 1 ? 's' : ''}</b> here — about <b>${fmt(j.rec)} hours</b> of stuck traffic cleared a week <span class="badge est">EST</span>.</div>` +
+      conf +
       `<div class="slab">Recent tickets behind this score <span class="badge fact">FACT</span></div>${ev}` +
       `<div class="cf">Skip ${j.name} and you give up ~${fmt(j.rec)} hours of stuck traffic cleared every week (EST).</div>`;
   }

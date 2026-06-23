@@ -68,6 +68,21 @@ def build_areas(d: pd.DataFrame, top: int = 12) -> list[dict]:
              "lon": round(float(r["lon"]), 5)} for _, r in g.iterrows()]
 
 
+def reject_rates(d: pd.DataFrame) -> tuple[float, pd.Series]:
+    """City + per-junction ticket-rejection rate among **decided** tickets (approved or rejected).
+    NULL/unprocessed tickets are excluded from the denominator — they aren't 'bad', just unjudged.
+    This is the honest data-quality signal (~30% of decided tickets are rejected city-wide; the
+    rejected share of *all* tickets is lower because ~40% are never adjudicated)."""
+    s = d["validation_status"].astype(str).str.lower()
+    rej = s.str.contains("reject", na=False)
+    decided = rej | s.str.contains("approv", na=False)
+    city = round(100 * int(rej.sum()) / max(int(decided.sum()), 1), 1)
+    nm = d[d["junction_name"] != "No Junction"]
+    num = rej.loc[nm.index].groupby(nm["junction_name"]).sum()
+    den = decided.loc[nm.index].groupby(nm["junction_name"]).sum().clip(lower=1)
+    return city, (num / den)
+
+
 def _evidence(d: pd.DataFrame, k: int = 5) -> dict:
     """Up to k sample raw rows per junction — the click-through evidence behind a score."""
     named = d[d["junction_name"] != "No Junction"].sort_values("t", ascending=False)
@@ -97,6 +112,7 @@ def build(cfg: Config, quick: bool = False) -> dict:
     evidence = _evidence(d)
     report = M.build_report(d)            # interpretable next-week forecast (AI/EST), parking data only
     preds = report["predictions"]
+    city_reject, jrej = reject_rates(d)   # data-confidence: rejection rate among decided tickets
 
     junctions = [{
         "name": r["name"], "lat": round(r["lat"], 5), "lon": round(r["lon"], 5),
@@ -106,6 +122,7 @@ def build(cfg: Config, quick: bool = False) -> dict:
         "top": str(r["top_violation"]).title(), "veh": int(r["veh"]),
         "rec": int(r["rec"]), "req": int(r["req"]),
         "ps": str(r.get("ps", "")),                            # police station -> equity
+        "reject_rate": round(float(jrej.get(r["junction_name"], 0.0)) * 100),  # data confidence (%)
         "evidence": evidence.get(r["junction_name"], []),
         "fc": preds.get(r["junction_name"]),                   # next-week forecast (AI), or None
     } for _, r in j.iterrows()]
@@ -124,6 +141,7 @@ def build(cfg: Config, quick: bool = False) -> dict:
         "covered_eve": (round(float(covered["eve_share"].max()), 1) if not covered.empty else 0),
         "hidden_est": hidden_evening_estimate(j),   # EST
         "repeat_offenders": P.repeat_offenders(d),
+        "reject_pct": city_reject,   # % of DECIDED tickets rejected (data-quality)
         "bbox": [float(d.lat.min()), float(d.lat.max()), float(d.lon.min()), float(d.lon.max())],
     }
     meta = {"weights": cfg.weights, "weeks": round(weeks, 1), "recovery_coef": cfg.recovery_coef}
