@@ -1,0 +1,4 @@
+# Keep submission artifacts (pitch deck, snapshots, docs) out of `git archive` source bundles.
+submission/ export-ignore
+# Raw data must never end up in an archive either (also gitignored).
+*.csv export-ignore

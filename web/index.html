@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>Pravah · Traffic Command Centre</title>
+<meta name="description" content="Pravah — map-first parking-pressure intelligence for the Bengaluru Traffic Police. Runs fully offline."/>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- the map is the home -->
+  <div id="map"><canvas id="glow"></canvas></div>
+
+  <div class="maplegend" aria-hidden="true">
+    <div class="lt">Pressure score</div>
+    <div class="scale"></div>
+    <div class="scrow"><span>0 · calm</span><span>100 · critical</span></div>
+    <div class="phk"><i></i>phantom = busy spot, off the radar</div>
+    <div class="sb"><div class="bar" id="sbar"></div><div class="lbl" id="slbl"></div></div>
+  </div>
+
+  <!-- floating top bar: brand + the only navigation -->
+  <div class="topbar">
+    <div class="brandpill">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <div class="bt">Pravah</div>
+        <div class="bs">Bengaluru Traffic Police</div>
+      </div>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <button data-panel="brief" class="active">Overview</button>
+      <button data-panel="priorities">Priorities</button>
+      <button data-panel="deploy">Deploy</button>
+      <button data-panel="forecast">Forecast</button>
+      <button data-panel="adjust" class="gear" aria-label="Adjust what matters" title="Adjust what matters">⚙</button>
+    </nav>
+  </div>
+
+  <!-- one slide-in panel, one task at a time -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="panel" id="panel" role="dialog" aria-labelledby="ptitle" aria-hidden="true">
+    <div class="phead">
+      <h2 id="ptitle">Overview</h2>
+      <button class="pclose" id="pclose" aria-label="Close panel">×</button>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </aside>
+
+  <div class="zoomctl">
+    <button id="zin" aria-label="Zoom in" title="Zoom in">+</button>
+    <button id="zout" aria-label="Zoom out" title="Zoom out">−</button>
+    <button id="zreset" aria-label="Reset view" title="Reset view">⌖</button>
+  </div>
+
+  <div class="hint-card" id="hint"><b>Tap any dot</b> to open a junction — its score, what's coming next week, and the fix. Scroll or pinch to zoom.</div>
+
+  <div class="tip" id="tip" role="tooltip"></div>
+
+<script src="basemap.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+.venv/
+venv/
+# raw data is large + sensitive — never commit
+data/raw/*.csv
+!data/raw/.gitkeep
+.DS_Store
+# submission artifacts kept on disk for upload (regenerable) — not committed
+submission/*.zip
+submission/*.pdf
