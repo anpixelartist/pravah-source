@@ -1,14 +1,63 @@
+# ---- Python ----
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
 .pytest_cache/
 .ruff_cache/
-dist/
+.mypy_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# ---- Virtual environments ----
 .venv/
 venv/
-# raw data is large + sensitive — never commit
+env/
+ENV/
+
+# ---- Raw data: large + sensitive — never commit ----
 data/raw/*.csv
 !data/raw/.gitkeep
-.DS_Store
-# submission artifacts kept on disk for upload (regenerable) — not committed
+
+# ---- Submission artifacts: regenerable, uploaded to the form (kept on disk only) ----
 submission/*.zip
 submission/*.pdf
+
+# ---- Agent / tooling files ----
+.claude/
+.claude
+AGENTS.md
+BUILD_PROMPT.md
+CLAUDE.md
+.cursor/
+
+# ---- Editors / IDE ----
+.vscode/
+.idea/
+*.sublime-*
+*.swp
+*~
+
+# ---- OS cruft ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---- Node (future-proofing) ----
+node_modules/
+
+# ---- Secrets / env ----
+.env
+.env.*
+*.local
+
+# ---- Logs ----
+*.log
+
+# ---- Local scratch (screenshots, temp test harness pages) ----
+/_*.png
+web/_*.html
+web/_*.js

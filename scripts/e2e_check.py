@@ -46,7 +46,7 @@ def main() -> int:
     check("phantom hotspots >= 5", k["n_phantom"] >= 5, str(k["n_phantom"]))
     check("junctions count matches", k["n_junctions"] == len(J), f"{k['n_junctions']} vs {len(J)}")
 
-    bad_decomp = bad_press = bad_fc = bad_req = 0
+    bad_decomp = bad_press = bad_fc = bad_req = bad_rej = 0
     for j in J:
         if abs((j["pc"] + j["pb"] + j["pv"]) - j["pressure"]) > 1.5:
             bad_decomp += 1
@@ -54,6 +54,8 @@ def main() -> int:
             bad_press += 1
         if j["req"] not in (1, 2, 3):
             bad_req += 1
+        if not 0 <= j.get("reject_rate", 0) <= 100:
+            bad_rej += 1
         fc = j.get("fc")
         if fc is not None and (fc["dir"] not in ("up", "down", "flat")
                                or not isinstance(fc["reasons"], list)):
@@ -62,6 +64,9 @@ def main() -> int:
     check("pressure in 0..100 (all)", bad_press == 0, f"{bad_press} off")
     check("officer tier in {1,2,3} (all)", bad_req == 0, f"{bad_req} off")
     check("forecast shape valid (all)", bad_fc == 0, f"{bad_fc} bad")
+    check("data-confidence rate present 0..100 (all)", bad_rej == 0, f"{bad_rej} off")
+    check("city reject_pct present 0..100",
+          0 <= d["kpi"].get("reject_pct", -1) <= 100, str(d["kpi"].get("reject_pct")))
 
     m = d["model"]["metrics"]
     check("model R2 present & >0.5", m.get("r2", 0) > 0.5, str(m.get("r2")))
